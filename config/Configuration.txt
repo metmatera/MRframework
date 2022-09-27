@@ -2,7 +2,7 @@
 #       EXTERNAL DEVICES         #
 #--------------------------------#
 ### Haptic devices List
-TouchDIVER
+Armband
 
 ### Teleoperation device
 Geomagic

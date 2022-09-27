@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\aProxy",
+    "\\src\\aProxy\\Armband",
+    "\\src\\bController",
+    "\\src\\cEntity"
+  ],
+  "SelectedNode": "\\src\\aProxy\\Armband\\ArmbandProxy.cpp",
+  "PreviewInSolutionExplorer": false
+}

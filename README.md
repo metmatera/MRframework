@@ -1,9 +1,9 @@
 # MRframework
 
-Work in progress
+_Work in progress_
 
 Steps to be always up-to-date (you have to be _git_ installed):
-- git clone 
+- _git clone https://github.com/metmatera/MRframework.git_
 
 *1. Prerequisites*
 ==================

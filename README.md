@@ -11,5 +11,5 @@ Steps to be always up-to-date (you have to be _git_ installed):
 - _git pull_ to make your local repository up-to-date w.r.t. the GitHub repository
 - After modifying your local repository you will need to update the Github repository following the next steps
 - _git add ._
-- _git commit -m '<message>'_, where <message> is a small text to describe your commit
+- _git commit -m "message"_, where _message_ is a small text to describe your commit
 - _git push_

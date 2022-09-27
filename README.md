@@ -1,5 +1,10 @@
 # MRframework
 
+Work in progress
+
+Steps to be always up-to-date (you have to be _git_ installed):
+- git clone 
+
 *1. Prerequisites*
 ==================
 

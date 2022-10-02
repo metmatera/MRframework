@@ -236,7 +236,7 @@ int ForceFeedbackNeedleInsertionStrategy::execTask() {
 		dynamic_cast<WeartDevice*>(this->haptics["TouchDIVER"])->setVibrationVolume(frictionFeedbackValue);
 	}//*/
 
-	int chosenHapticIdx = 0;
+	/*int chosenHapticIdx = 0;
 	f_feedback = this->computeForceFeedback(chosenHapticIdx);
 	if (hapticListNames[chosenHapticIdx] == "TouchDIVER") {
 		this->forcefeedback = f_feedback[2];

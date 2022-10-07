@@ -9,6 +9,7 @@ struct HapticState {
 
 	Eigen::VectorXf force;		// force vector of the kinestetic feedback
 	float vibroIntensity;		// intensity of the vibrotactile feedback -- Please note that, differently from what can be expected, the armband still uses the force variable (kinestetic) feedback rendering, rather than this variable, as this separation has been planned later. TODO: Consider to re-organize and associate variables to proper devices accordingly.
+	int pattern;				// feedback pattern
 
 };
 
@@ -44,17 +45,18 @@ public:
 
 	/**
 	* @brief Set function
-	* Set the feedback haptic force on the Geomagic device
+	* Set the feedback haptic force on the Armband device
 	* @param f: the feedback force to be set
 	*/
 	inline void setHapticForce(const Eigen::VectorXf& f) { this->hapticState.force = f; }
 
 	/**
 	* @brief Get function
-	* Get the feedback haptic force on the Geomagic device
+	* Get the feedback haptic force on the Armband device
 	* @return the feedback force
 	*/
 	inline Eigen::VectorXf getHapticForce() { return this->hapticState.force; }
+
 
 	/**
 	* @brief Set function
@@ -63,12 +65,27 @@ public:
 	*/
 	inline void setVibrotactileIntensity(const float& v) { this->hapticState.vibroIntensity = v; }
 
+
 	/**
 	* @brief Get function
 	* Get the vibrotactile feedback
 	* @return the vibrotactile feedback
 	*/
 	inline float getVibrotactileIntensity() { return this->hapticState.vibroIntensity; }
+
+	/**
+	* @brief Set function
+	* Set the feedback haptic pattern on the Armband device
+	* @param p: the pattern to be set
+	*/
+	inline void setHapticPattern(const int& p) { this->hapticState.pattern = p; }
+
+	/**
+	* @brief Get function
+	* Get the feedback haptic pattern on the Armband device
+	* @return the feedback pattern
+	*/
+	inline int getHapticPattern() { return this->hapticState.pattern; }
 
 	/**
 	* @brief Get function

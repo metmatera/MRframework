@@ -105,6 +105,12 @@ public:
 	*/
 	void printInstructions();
 
+	/**
+	* @brief selection function
+	* Select the custom feedback pattern for the haptic device from the showed list
+	*/
+	void selectPattern();
+
 private:
 
 	KeyboardData kbdata;			//!< KeyboardData structure

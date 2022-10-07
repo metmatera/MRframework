@@ -13,7 +13,28 @@ double currentTime = 0.00;
 clock_t tStart;
 bool first = true, second = false;
 
+// ------------ Custom Force Feedback initialization ------------ //
+// Task variables
+int TASK_STARTED = -1;
 
+// Pattern variables
+// Pattern 2
+int DIV = 8;
+bool IS_PUNCTURING = false;
+bool TMP_IS_PUNCTURING = IS_PUNCTURING;
+bool IS_TRANSICTION = false;
+
+// Pattern 3
+int NUM_MOTORS = 4;
+int LAYERS_PASSED = 0;
+bool UPRISING = false;
+bool LAYERS_UPDATED = false;
+bool P2_ALT_SOLO = true;
+std::vector<int> MOTOR_STATE = { 0, -1, -1, -1 };
+std::vector<float> MOTOR_ELASTIC_F = { -1., -1., -1., -1. };
+std::vector<float> MOTOR_FRICTION_F = { -1., -1., -1., -1. };
+std::vector<bool> PENETRATED = { false, false, false, false };
+// -------------------------------------------------------------- //
 
 
 /**
@@ -32,7 +53,7 @@ VibBrac::VibBrac(int n) {
 	std::cout << "Starting" << std::endl;
 
 	// Try to connect to all the armbands. n stands for number of armbands
-	for (int i = 0; i<n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		while (!devices.at(i).is_connected && l_iHapticInitTrial < 3)
 		{
@@ -55,7 +76,7 @@ VibBrac::VibBrac(int n) {
 *
 */
 VibBrac::~VibBrac() {
-	for (int i = 0; i<devices.size(); i++)
+	for (int i = 0; i < devices.size(); i++)
 	{
 		devices.at(i).closeCommunication();
 	}
@@ -68,6 +89,9 @@ VibBrac::~VibBrac() {
 ArmbandProxy::ArmbandProxy() : HapticProxy() {//, HLInterface(){
 
 	time_ = 0.0;
+	
+	// Init the class
+	//this->init();
 
 }
 
@@ -76,7 +100,7 @@ ArmbandProxy::ArmbandProxy() : HapticProxy() {//, HLInterface(){
 *
 */
 ArmbandProxy::~ArmbandProxy() {
-	
+
 	delete this->vibs;
 
 }
@@ -103,6 +127,7 @@ void ArmbandProxy::init() {
 
 	this->hapticDOF = 6;
 	this->hapticState.force.setZero(this->hapticDOF);
+	this->setHapticPattern(F_PATTERN_1);
 	this->availability(true);
 	this->setRunning(true);
 }
@@ -136,14 +161,7 @@ inline void ArmbandProxy::sendForce(const Eigen::VectorXf& f) {
 * Set the custom feedback haptic force on the Armband device
 * @param f: the feedback force to be set -> flat 3x3 matrix with shape (1,9)
 */
-int TASK_STARTED = -1;
-int F_PATTERN_1 = 1;
-int F_PATTERN_2 = 2;
-int FEEDBACK_PATTERN = F_PATTERN_2;
-bool P2_ALT_SOLO = false;
-std::vector<bool> PENETRATED = { false, false, false, false };
-std::vector<int> MOTOR_STATE = { -1, 0, -1, -1 };
-inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i) {
+inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i, const int j) {
 
 	// Initialization
 	Eigen::Vector3f fb_m = Eigen::Vector3f(f(0), f(1), f(2));
@@ -154,28 +172,50 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i)
 
 	// Re-init global variables
 	if ((TASK_STARTED == -1) && (elastic(1) == 0) && (friction(1) == 0)) {
-		PENETRATED = {false, false, false, false};
-		MOTOR_STATE = { -1, 0, -1, -1 };
+
+		// Re-init Pattern 2 variables
+		DIV = 8;
+		IS_PUNCTURING = false;
+		TMP_IS_PUNCTURING = IS_PUNCTURING;
+		IS_TRANSICTION = false;
+
+		// Re-init Pattern 3 variables
 		TASK_STARTED = 0;
+		LAYERS_PASSED = 0;
+		UPRISING = false;
+		LAYERS_UPDATED = false;
+		MOTOR_STATE = { 0, -1, -1, -1 };
+		MOTOR_ELASTIC_F = { -1., -1., -1., -1. };
+		MOTOR_FRICTION_F = { -1., -1., -1., -1. };
+		PENETRATED = { false, false, false, false };
 	}
 
 	// Force selection and computation
-	//std::cout << "____________________________________" << std::endl;
-	//std::cout << "fb_m(1) = " << fb_m(1) << std::endl;
+	/*std::cout << "____________________________________" << std::endl;
+	std::cout << "friction(1) = " << friction(1) << std::endl;
+	std::cout << "elastic(1) = " << elastic(1) << std::endl;*/
 	float fb_m_component = fb_m(1);
+	float elas_component = elastic(1);
+	float fric_component = friction(1);
 	float elastic_term = (MAX_Elastic_force_armband_effect - MIN_FRE_ARMBAND) / MAX_Elastic_force;
-	if (friction(1) < 0) fb_m_component = 0.5 * (-fb_m_component);
-	fb_m_component = friction(1) == 0 ? 0 : fb_m_component * elastic_term + MIN_FRE_ARMBAND;
-	float motor_force = fb_m_component;
+	if (friction(1) < 0) {
+		UPRISING = true;
+		fric_component = 0.5 * (-fric_component);
+		fb_m_component = 0.5 * (-fb_m_component);
+	}
+	float motor_force_fric = friction(1) == 0 ? 0 : fric_component * elastic_term + MIN_FRE_ARMBAND + DELTA_FR_FORCE;
+	float motor_force_elas = elastic(1) == 0 ? 0 : elas_component * elastic_term + MIN_FRE_ARMBAND + DELTA_EL_FORCE;
+	float motor_force = friction(1) == 0 ? 0 : fb_m_component * elastic_term + MIN_FRE_ARMBAND;
 	//std::cout << "motor force = " << motor_force << std::endl;
 	//std::cout << "____________________________________" << std::endl;
 
 	// Motor control
+	int feedback_pattern = this->getHapticPattern();
 	// ---------- Pattern 1 ---------- //
-	/* All the motors vibrate contemporary, and the 
+	/* All the motors vibrate contemporary, and the
 	   vibration is 'alternate' when the elastic force
 	   is different than 0 (we are penetrating a tissue */
-	if (FEEDBACK_PATTERN == F_PATTERN_1) {
+	if (feedback_pattern == F_PATTERN_1) {
 		if (elastic(1) == 0) {
 			for (int i_motor = 0; i_motor <= 3; i_motor++)
 			{
@@ -190,30 +230,114 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i)
 			if (i == 13) armBand_motorsi.setZero();
 		}
 	}
+
 	// ---------- Pattern 2 ---------- //
+	/* The intensity of the force sent to
+	   the motors is the same during the
+	   entire process. The vibration is
+	   continue during the tissue break.
+	   The vibration during penetration occurs
+	   intermittently and the frequency increases
+	   according to the depth of the tissue.*/
+	if (feedback_pattern == F_PATTERN_2) {
+		// TODO:
+		/* Rendering of the vibration when the needle
+		   is coming back to the initial configuration*/
+
+		   // Debug print
+		   //std::cout << "motor force: " << motor_force << std::endl;
+		if (motor_force != 0) motor_force = 90.0;
+
+		if (elastic(1) >= 1e-3) IS_PUNCTURING = true;
+		else if (elastic(1) == 0) IS_PUNCTURING = false;
+
+		if (IS_PUNCTURING != TMP_IS_PUNCTURING) {
+			IS_TRANSICTION = !IS_TRANSICTION;
+			TMP_IS_PUNCTURING = IS_PUNCTURING;
+		}
+
+		if (IS_TRANSICTION) {
+			IS_TRANSICTION = false;
+			DIV--;
+		}
+
+		// Debug print
+		/*
+		std::cout << "elastic force: " << elastic(1) << std::endl;
+		std::cout << "IS_PUNCTURING: " << IS_PUNCTURING << std::endl;
+		std::cout << "IS_TRANSICTION: " << IS_TRANSICTION << std::endl;
+		std::cout << "TMP_IS_PUNCTURING: " << TMP_IS_PUNCTURING << std::endl;
+		std::cout << "DIV: " << DIV << std::endl;
+		std::cout << "________________________________" << std::endl;
+		*/
+
+		if (IS_PUNCTURING) {
+			for (int i_motor = 0; i_motor <= 3; i_motor++) {
+				armBand_motorsi(i_motor) = motor_force;
+			}
+		}
+		else if (!IS_PUNCTURING) {
+			if (i % DIV == 0) {
+				for (int i_motor = 0; i_motor <= 3; i_motor++) {
+					armBand_motorsi(i_motor) = motor_force;
+				}
+			}
+		}
+	}
+
+	// ---------- Pattern 3 ---------- //
 	/* Each time a tissue is penetrated, a
-	   different motor activates. Initially, 
+	   different motor activates. Initially,
 	   the vibration is alternate; after the tissue break,
 	   the vibration becomes continue. */
-	if (FEEDBACK_PATTERN == F_PATTERN_2) {
+	// TODO: implement friction tissue switch during uprising
+	if (feedback_pattern == F_PATTERN_3) {
 		if (elastic(1) == 0) {
+			// Update flag to update number of layers
+			LAYERS_UPDATED = false;
+
 			// Check status
 			for (int i_motor = 0; i_motor <= 3; i_motor++)
 			{
 				if (PENETRATED[3]) MOTOR_STATE[3] = 2;
-				if ((i_motor > 0) && (MOTOR_STATE[i_motor] == -1) && (MOTOR_STATE[i_motor - 1] == 1)) {
-					MOTOR_STATE[i_motor - 1] = 2;
-					MOTOR_STATE[i_motor] = 0;
+				// TODO: check if <= needed with 4 motor active
+				if (LAYERS_PASSED < NUM_MOTORS) {
+					if ((i_motor > 0) && (MOTOR_STATE[i_motor] == -1) && (MOTOR_STATE[i_motor - 1] == 1)) {
+						MOTOR_STATE[i_motor - 1] = 2;
+						MOTOR_STATE[i_motor] = 0;
+					}
+				}
+				else {		// TODO: test with more layers
+					if (MOTOR_STATE[i_motor] == 1) {
+						MOTOR_STATE[i_motor] = 2;
+					}
 				}
 			}
 			// Assign vibration value
 			for (int i_motor = 0; i_motor <= 3; i_motor++)
 			{
-				if (MOTOR_STATE[i_motor] == 2)
-					armBand_motorsi(i_motor) = motor_force;
+				if (MOTOR_STATE[i_motor] == 2) {
+					if (MOTOR_FRICTION_F[i_motor] == -1)
+						MOTOR_FRICTION_F[i_motor] = motor_force_fric;
+					armBand_motorsi(i_motor) = MOTOR_FRICTION_F[i_motor];
+				}
 			}
 		}
 		else if (elastic(1) > 1e-3) {
+			// Update number of layers penetrated
+			if (!LAYERS_UPDATED) {
+				LAYERS_PASSED++;
+				LAYERS_UPDATED = true;
+			}
+
+			// Reset motor status after the 4th penetration
+			// (eventually change with the first motor activated)
+			// TODO: test with more than 4 layers
+			if (LAYERS_PASSED > NUM_MOTORS) {
+				int motor_index = (LAYERS_PASSED - 1) % NUM_MOTORS;
+				MOTOR_STATE[motor_index] = 0;
+			}
+
 			// Set status
 			for (int i_motor = 0; i_motor <= 3; i_motor++)
 			{
@@ -225,14 +349,26 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i)
 			// Assign vibration value
 			for (int i_motor = 0; i_motor <= 3; i_motor++)
 			{
-				if (!P2_ALT_SOLO) 
-					if (((MOTOR_STATE[i_motor] == 1) && (i % 3 == 0)) || (MOTOR_STATE[i_motor] == 2))
-						armBand_motorsi(i_motor) = motor_force;
-				else
-					if ((MOTOR_STATE[i_motor] == 1) && (i % 3 == 0))
-						armBand_motorsi(i_motor) = motor_force;
+				if (!P2_ALT_SOLO) {
+					if ((MOTOR_STATE[i_motor] == 1) && (i % 3 == 0)) {
+						if (MOTOR_ELASTIC_F[i_motor] == -1)
+							MOTOR_ELASTIC_F[i_motor] = motor_force_elas;
+						armBand_motorsi(i_motor) = MOTOR_ELASTIC_F[i_motor];
+					}
+					else if (MOTOR_STATE[i_motor] == 2)
+						armBand_motorsi(i_motor) = MOTOR_FRICTION_F[i_motor];
+				}
+				else {
+					if ((MOTOR_STATE[i_motor] == 1) && (i % 3 == 0)) {
+						if (MOTOR_ELASTIC_F[i_motor] == -1)
+							MOTOR_ELASTIC_F[i_motor] = motor_force_elas;
+						armBand_motorsi(i_motor) = MOTOR_ELASTIC_F[i_motor];
+					}
+				}
 			}
 		}
+		if (friction(1) == 0 && UPRISING)
+			armBand_motorsi.setZero();
 	}
 
 	// Debug print
@@ -249,7 +385,7 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i)
 /**
 * @Send PWM to each motor's ArmBand according to the EF position, warning thrwow level frecuncy PWM  when the trajectory isno in a straigh forward  way(z-axis).
 */
-Eigen::Vector4i ArmbandProxy::Trajectory_alert(Eigen::Vector3f EF_Pos, Eigen::Vector3f z_obj_line,float Elastic_force)
+Eigen::Vector4i ArmbandProxy::Trajectory_alert(Eigen::Vector3f EF_Pos, Eigen::Vector3f z_obj_line, float Elastic_force)
 {
 	// The EF position is arranged in x,y,z order in other words 0,1,2 indexes
 	EF_Error = z_obj_line - EF_Pos;
@@ -280,16 +416,16 @@ Eigen::Vector4i ArmbandProxy::Trajectory_alert(Eigen::Vector3f EF_Pos, Eigen::Ve
 		}
 	}
 
-	armBand_motors = armBand_motors / MAX_ERROR_THRESHOLD_UPPER_BOUND*MAX_FRE_ARMBAND;
+	armBand_motors = armBand_motors / MAX_ERROR_THRESHOLD_UPPER_BOUND * MAX_FRE_ARMBAND;
 	Eigen::Vector4i armBand_motorsi = armBand_motors.cast <int>();
 	//armBand_motorsi.setZero();
 
 	// std::cout << "EF:	"<< EF_Pos.transpose() << "	Error:	" << EF_Error.transpose() << "	PWM:	" << armBand_motorsi.transpose() << std::endl;
 
 	// Sending data to the armband
-	int armBand_motorsi0[] = {armBand_motors(0), armBand_motors(1), armBand_motors(2), armBand_motors(3)};
+	int armBand_motorsi0[] = { armBand_motors(0), armBand_motors(1), armBand_motors(2), armBand_motors(3) };
 
-	Eigen::Vector4i armBand_motorsi2=this->Cutting_force2motors(armBand_motorsi0, Elastic_force);
+	Eigen::Vector4i armBand_motorsi2 = this->Cutting_force2motors(armBand_motorsi0, Elastic_force);
 	devices.at(0).run(armBand_motorsi2);
 	// std::cout << "Elastic_Force:	"<< Elastic_force << "	Motors PWM:	" << armBand_motorsi2.transpose()  << std::endl;
 	return armBand_motorsi;
@@ -309,23 +445,23 @@ Eigen::Vector4i ArmbandProxy::Forces2MotorsDim(Eigen::Vector6f _ForcesAndTorques
 	//std::cout << _ForcesAndTorques << std::endl;
 
 	// Proportional controller for each vibrator in the armband based on feedback
-	if (_ForcesAndTorques(1)<0) {
+	if (_ForcesAndTorques(1) < 0) {
 		armBand_motors(2) = -_ForcesAndTorques(0);
 	}
 	else
 	{
-		armBand_motors(0) =  _ForcesAndTorques(0);
+		armBand_motors(0) = _ForcesAndTorques(0);
 	}
-	if (_ForcesAndTorques(2)<0) {
-		armBand_motors(3) =  -_ForcesAndTorques(1);
+	if (_ForcesAndTorques(2) < 0) {
+		armBand_motors(3) = -_ForcesAndTorques(1);
 	}
 	else
 	{
-		armBand_motors(1) =  _ForcesAndTorques(1);
+		armBand_motors(1) = _ForcesAndTorques(1);
 	}
-	armBand_motors=armBand_motors / MAX_FORCE*MAX_FRE_ARMBAND;
-	Eigen::Vector4i armBand_motorsi= armBand_motors.cast <int>();
-	
+	armBand_motors = armBand_motors / MAX_FORCE * MAX_FRE_ARMBAND;
+	Eigen::Vector4i armBand_motorsi = armBand_motors.cast <int>();
+
 	return armBand_motorsi;
 }
 
@@ -351,8 +487,12 @@ void ArmbandProxy::run() {
 	//this->sendForce(this->hapticState.force);
 	//this->running = false;
 
+	// Initialize custom pattern 
+	this->setHapticPattern(F_PATTERN_1);
+
 	// Parameter for the sendCustom function
 	int i = 0;
+	int j = 0;
 
 	while (this->isRunning()) {
 
@@ -368,10 +508,11 @@ void ArmbandProxy::run() {
 		// Update counter
 		// TODO: check better systems to update counter
 		i++;
+		j++;
 		if (i == 20) i = 0;
-		
+
 		// Send the haptic force on the device
-		this->sendForceCustom(this->hapticState.force, i);
+		this->sendForceCustom(this->hapticState.force, i, j);
 
 		//----------------------------------------------------------------//
 
@@ -414,16 +555,16 @@ void ArmbandProxy::clear() {
 */
 Eigen::Vector4i ArmbandProxy::Cutting_force2motors(int ForcesAndTorques[], float Elastic_force) {
 
- Eigen::Vector4i armBand_motorsi;
- armBand_motorsi.setZero();
- //float elastic_offest = Elastic_force>0 ? (Elastic_force / MAX_Elastic_force)*(MAX_Elastic_force_armband_effect)+MIN_FRE_ARMBAND : 0;
- float elastic_offest = Elastic_force>0 ? (Elastic_force / MAX_Elastic_force)*(MAX_Elastic_force_armband_effect- MIN_FRE_ARMBAND)+MIN_FRE_ARMBAND : 0;
- for (int i_motor = 0; i_motor <= 3; i_motor++)
- {
-	 armBand_motorsi(i_motor) = elastic_offest; //+ ForcesAndTorques[i_motor]+ elastic_offest;
- }
-  
- return armBand_motorsi;
+	Eigen::Vector4i armBand_motorsi;
+	armBand_motorsi.setZero();
+	//float elastic_offest = Elastic_force>0 ? (Elastic_force / MAX_Elastic_force)*(MAX_Elastic_force_armband_effect)+MIN_FRE_ARMBAND : 0;
+	float elastic_offest = Elastic_force > 0 ? (Elastic_force / MAX_Elastic_force) * (MAX_Elastic_force_armband_effect - MIN_FRE_ARMBAND) + MIN_FRE_ARMBAND : 0;
+	for (int i_motor = 0; i_motor <= 3; i_motor++)
+	{
+		armBand_motorsi(i_motor) = elastic_offest; //+ ForcesAndTorques[i_motor]+ elastic_offest;
+	}
+
+	return armBand_motorsi;
 }
 
 
@@ -432,7 +573,7 @@ Eigen::Vector4i ArmbandProxy::Cutting_force2motors(int ForcesAndTorques[], float
 * Print the names of all the V-REP objects loaded for the simulation
 */
 void ArmbandProxy::print_Forces_Set(Eigen::Vector6f sensorFe0et) {
-	Eigen::Vector4i motor_pwm=this->Forces2MotorsDim(sensorFe0et);
+	Eigen::Vector4i motor_pwm = this->Forces2MotorsDim(sensorFe0et);
 
 	//motor_pwm=this->Cutting_force2motors(motor_pwm);
 }

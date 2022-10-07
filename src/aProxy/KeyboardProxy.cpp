@@ -148,6 +148,10 @@ void KeyboardProxy::run() {
 				//...
 				this->printInstructions();
 			}
+			else if (key == (int)'p') { // Custom haptic pattern selection
+				//...
+				this->selectPattern();
+			}
 
 
 		}
@@ -326,10 +330,47 @@ void KeyboardProxy::printInstructions() {
 		<< "\t'a'   = " << "Enable/Disable Autonomous insertion mode" << std::endl
 		<< "\t'm'   = " << "Enable/Disable Manual Guidance mode" << std::endl
 		<< "\t'e'   = " << "Enable/Disable force feedback in Teleoperation mode" << std::endl
-		<< "\t'h'   = " << "Print this menu" << std::endl << std::endl
+		<< "\t'h'   = " << "Print this menu" << std::endl
+		<< "\t'p'   = " << "Pattern selection menu" << std::endl << std::endl
 		<< "\tENTER = " << "Start/Stop the chosen Task" << std::endl
 		<< "\tSPACE = " << "Generic Trigger input for Task" << std::endl << std::endl
 		<< "\tESC   = " << "Quit the program" << std::endl << std::endl;
 
+
+}
+
+/**
+* @brief selection function
+* Select the custom feedback pattern for the haptic device from the showed list
+*/
+void KeyboardProxy::selectPattern() {
+
+	std::cout << "Select pattern: \n"
+		<< "\t'1'   = " << "Pattern 1" << std::endl
+		<< "\t'2'   = " << "Pattern 2" << std::endl
+		<< "\t'3'   = " << "Pattern 3" << std::endl;
+
+	// Capture user input
+	int choice = 0;
+	std::cin >> choice;
+	while (choice != 1 && choice != 2 && choice != 3) {
+		std::cout << "Select a correct pattern! [choices: 1 | 2 | 3]" << std::endl;
+		std::cin >> choice;
+	}
+
+	// Select pattern
+	HapticState hs;
+	if (choice == 1 || choice == 2 || choice == 3) {
+		// Assign selected pattern
+		std::cout << "Assigning pattern " << choice << std::endl;
+		hs.pattern = choice;
+	}
+	else {
+		// Assign default pattern
+		std::cout << "Something wrong. Assigning default pattern ..." << std::endl;
+		hs.pattern = 1;
+	}
+	this->sys.updateHapticDevice(hs);
+	std::cout << "Pattern assigned successfully" << std::endl;
 
 }

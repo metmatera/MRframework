@@ -48,11 +48,25 @@ public:
 	inline void setForceFeedback(const Eigen::VectorXf& f) { this->fbForce = f; }
 
 	/**
+	* @brief Set function
+	* Set the feedback pattern
+	* @param f: feedback pattern to be set
+	*/
+	inline void setFeedbackPattern(const int& p) { this->fbPattern = p; }
+
+	/**
 	* @brief Get function
 	* Get the 3D feedback force vector
 	* @return the 3D feedback force vector
 	*/
 	inline Eigen::VectorXf getForceFeedback() { return this->fbForce; }
+
+	/**
+	* @brief Get function
+	* Get the feedback pattern
+	* @return the feedback pattern
+	*/
+	inline int getFeedbackPattern() { return this->fbPattern; }
 
 
 	/**
@@ -97,6 +111,7 @@ protected:
 
 	float force_scale;				//!< Scale factor for the master commanded force on the slave system
 	Eigen::VectorXf fbForce;		//!< 3D feedback force vector of the Haptic interface
+	int fbPattern;					//!< feedback pattern of the Haptic interface
 	bool useForceFeedback;			//!< Flag stating if the force feedback is enabled in the teleoperation scheme
 	Eigen::MatrixXf Rms;			//!< Rotation matrix expressing the orientation of the slave system (robot) wrt the haptic system (HapticInterface)
 

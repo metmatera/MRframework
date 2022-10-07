@@ -243,7 +243,10 @@ void ControlContext::mainLoop() {
 		for (int i = 0; i < hapticNameList.size(); i++) {
 			std::string hapticName_i = hapticNameList[i];
 			Eigen::VectorXf masterForce = haptics[hapticName_i]->getForceFeedback();
+			int masterPattern = haptics[hapticName_i]->getFeedbackPattern();
 			hapticProxies[hapticName_i]->setHapticForce(masterForce);
+			if (masterPattern != 0)
+				hapticProxies[hapticName_i]->setHapticPattern(masterPattern);
 
 			// Maybe a better way to integrate this can be found so as to make everything more homogeneous ... use this now for the sake of time
 			if (hapticName_i.find("TouchDIVER") != std::string::npos) {

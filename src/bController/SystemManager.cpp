@@ -1171,16 +1171,19 @@ void SystemManager::updateHapticDevice(const HapticState& hs) {
 
 	// Local pointers to instruments
 	std::map < std::string, Instrument* >::iterator haptIt;
-	std::string hapticName = "HapticProxy";
+
+#ifdef WITH_ARMBAND
+	std::string hapticName = "Armband";
 	HapticInterface* haptic = nullptr;
 
 	haptIt = this->instruments.find(hapticName.c_str());
 	if (haptIt != this->instruments.end()) {
 		haptic = (HapticInterface*)this->instruments[hapticName.c_str()];
+		haptic->setFeedbackPattern(hs.pattern);
 		//haptic->setForceFeedback(hs.force);
 		//std::cout << "hs.force = " << hs.force.transpose() << std::endl;
 	}
-
+#endif
 }
 
 

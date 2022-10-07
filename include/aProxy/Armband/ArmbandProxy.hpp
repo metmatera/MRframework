@@ -56,6 +56,7 @@ class ArmbandProxy : public HapticProxy {//HLInterface,
 
 public:
 
+// Original macro
 #define MAX_FORCE 0.001
 #define MAX_FRE_ARMBAND 205
 #define MIN_FRE_ARMBAND 30
@@ -64,6 +65,16 @@ public:
 #define ARMBAND_OFFSET MIN_FRE_ARMBAND* MAX_ERROR_THRESHOLD_UPPER_BOUND/MAX_FRE_ARMBAND
 #define MAX_Elastic_force 0.15f//( 0.010f +0.020f +0.015f +0.019f)
 #define MAX_Elastic_force_armband_effect 255//-MAX_FRE_ARMBAND
+
+// Pattern selection macro
+#define F_PATTERN_1 1
+#define F_PATTERN_2 2
+#define F_PATTERN_3 3
+
+// Other custom macro
+#define DELTA_FR_FORCE 20		// Value to increase the friction force feedback
+#define DELTA_EL_FORCE 40		// Value to increase the elastic force feedback
+	
 	/**
 	* @brief Default contructor of ArmbandProxy class
 	*
@@ -138,7 +149,7 @@ public:
 	* @param f: the feedback force to be set
 	* @param i: counter to control the  execution
 	*/
-	void sendForceCustom(const Eigen::VectorXf& f, const int i);
+	void sendForceCustom(const Eigen::VectorXf& f, const int i, const int j);
 
 
 private:

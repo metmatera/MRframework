@@ -160,6 +160,8 @@ inline void ArmbandProxy::sendForce(const Eigen::VectorXf& f) {
 * @brief CUSTOM Set function
 * Set the custom feedback haptic force on the Armband device
 * @param f: the feedback force to be set -> flat 3x3 matrix with shape (1,9)
+* @param i: counter1 to alternate vibrations
+* @param j: counter2 to alternate vibrations
 */
 inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i, const int j) {
 
@@ -223,11 +225,11 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 			}
 		}
 		else {
-			if (i == 1 || i == 2 || i == 3) armBand_motorsi(0) = motor_force;
-			if (i == 4 || i == 5 || i == 6) armBand_motorsi(1) = motor_force;
-			if (i == 7 || i == 8 || i == 9) armBand_motorsi(2) = motor_force;
-			if (i == 10 || i == 11 || i == 12) armBand_motorsi(3) = motor_force;
-			if (i == 13) armBand_motorsi.setZero();
+			if (j == 1 || j == 2 || j == 3) armBand_motorsi(0) = motor_force;
+			if (j == 4 || j == 5 || j == 6) armBand_motorsi(1) = motor_force;
+			if (j == 7 || j == 8 || j == 9) armBand_motorsi(2) = motor_force;
+			if (j == 10 || j == 11 || j == 12) armBand_motorsi(3) = motor_force;
+			if (j == 13) armBand_motorsi.setZero();
 		}
 	}
 
@@ -289,7 +291,13 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 	/* Each time a tissue is penetrated, a
 	   different motor activates. Initially,
 	   the vibration is alternate; after the tissue break,
-	   the vibration becomes continue. */
+	   the vibration becomes continue. 
+	   MOTOR_STATE: {
+					-1 -> Inactive
+					 0 -> Ready
+					 1 -> Alternate mode
+					 2 -> Continuous mode
+		}*/
 	// TODO: implement friction tissue switch during uprising
 	if (feedback_pattern == F_PATTERN_3) {
 		if (elastic(1) == 0) {
@@ -490,7 +498,7 @@ void ArmbandProxy::run() {
 	// Initialize custom pattern 
 	this->setHapticPattern(F_PATTERN_1);
 
-	// Parameter for the sendCustom function
+	// Parameters for the sendCustom function
 	int i = 0;
 	int j = 0;
 
@@ -510,6 +518,7 @@ void ArmbandProxy::run() {
 		i++;
 		j++;
 		if (i == 20) i = 0;
+		if (j == 14) j = 0;
 
 		// Send the haptic force on the device
 		this->sendForceCustom(this->hapticState.force, i, j);

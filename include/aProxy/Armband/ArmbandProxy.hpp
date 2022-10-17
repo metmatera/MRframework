@@ -146,8 +146,9 @@ public:
 	/**
 	* @brief CUSTOM Set function
 	* Set the custom feedback haptic force on the Armband device
-	* @param f: the feedback force to be set
-	* @param i: counter to control the  execution
+	* @param f: the feedback force to be set -> flat 3x3 matrix with shape (1,9)
+	* @param i: counter1 to alternate vibrations
+	* @param j: counter2 to alternate vibrations
 	*/
 	void sendForceCustom(const Eigen::VectorXf& f, const int i, const int j);
 

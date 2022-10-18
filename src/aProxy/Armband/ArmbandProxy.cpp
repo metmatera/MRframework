@@ -46,7 +46,7 @@ VibBrac::VibBrac(int n) {
 	int l_iHapticInitTrial = 1;
 
 	// Set the COM port as seen in the device bluetooth settings
-	std::string str = "COM3";
+	std::string str = "COM4";
 	std::wstring g_sHapticPort(str.length(), L' ');
 	std::copy(str.begin(), str.end(), g_sHapticPort.begin());
 
@@ -273,8 +273,9 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 		std::cout << "________________________________" << std::endl;
 		*/
 
-		if (IS_PUNCTURING) {
+		if (IS_PUNCTURING || UPRISING) {
 			for (int i_motor = 0; i_motor <= 3; i_motor++) {
+				if (UPRISING) motor_force = 45.0;
 				armBand_motorsi(i_motor) = motor_force;
 			}
 		}
@@ -300,38 +301,7 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 		}*/
 	// TODO: implement friction tissue switch during uprising
 	if (feedback_pattern == F_PATTERN_3) {
-		if (elastic(1) == 0) {
-			// Update flag to update number of layers
-			LAYERS_UPDATED = false;
-
-			// Check status
-			for (int i_motor = 0; i_motor <= 3; i_motor++)
-			{
-				if (PENETRATED[3]) MOTOR_STATE[3] = 2;
-				// TODO: check if <= needed with 4 motor active
-				if (LAYERS_PASSED < NUM_MOTORS) {
-					if ((i_motor > 0) && (MOTOR_STATE[i_motor] == -1) && (MOTOR_STATE[i_motor - 1] == 1)) {
-						MOTOR_STATE[i_motor - 1] = 2;
-						MOTOR_STATE[i_motor] = 0;
-					}
-				}
-				else {		// TODO: test with more layers
-					if (MOTOR_STATE[i_motor] == 1) {
-						MOTOR_STATE[i_motor] = 2;
-					}
-				}
-			}
-			// Assign vibration value
-			for (int i_motor = 0; i_motor <= 3; i_motor++)
-			{
-				if (MOTOR_STATE[i_motor] == 2) {
-					if (MOTOR_FRICTION_F[i_motor] == -1)
-						MOTOR_FRICTION_F[i_motor] = motor_force_fric;
-					armBand_motorsi(i_motor) = MOTOR_FRICTION_F[i_motor];
-				}
-			}
-		}
-		else if (elastic(1) > 1e-3) {
+		if (elastic(1) > 1e-3) {
 			// Update number of layers penetrated
 			if (!LAYERS_UPDATED) {
 				LAYERS_PASSED++;
@@ -375,9 +345,41 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 				}
 			}
 		}
-		if (friction(1) == 0 && UPRISING)
-			armBand_motorsi.setZero();
+		else if (elastic(1) == 0) {
+			// Update flag to update number of layers
+			LAYERS_UPDATED = false;
+
+			// Check status
+			for (int i_motor = 0; i_motor <= 3; i_motor++)
+			{
+				if (PENETRATED[3]) MOTOR_STATE[3] = 2;
+				// TODO: check if <= needed with 4 motor active
+				if (LAYERS_PASSED < NUM_MOTORS) {
+					if ((i_motor > 0) && (MOTOR_STATE[i_motor] == -1) && (MOTOR_STATE[i_motor - 1] == 1)) {
+						MOTOR_STATE[i_motor - 1] = 2;
+						MOTOR_STATE[i_motor] = 0;
+					}
+				}
+				else {		// TODO: test with more layers
+					if (MOTOR_STATE[i_motor] == 1) {
+						MOTOR_STATE[i_motor] = 2;
+					}
+				}
+			}
+			// Assign vibration value
+			for (int i_motor = 0; i_motor <= 3; i_motor++)
+			{
+				if (MOTOR_STATE[i_motor] == 2) {
+					if (MOTOR_FRICTION_F[i_motor] == -1)
+						MOTOR_FRICTION_F[i_motor] = motor_force_fric;
+					armBand_motorsi(i_motor) = MOTOR_FRICTION_F[i_motor];
+				}
+			}
+		}
 	}
+	// Zeroed force when needle is out of the body
+	if (friction(1) == 0 && UPRISING)
+		armBand_motorsi.setZero();
 
 	// Debug print
 	/*std::cout << "____________________________________" << std::endl;

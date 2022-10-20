@@ -46,7 +46,7 @@ VibBrac::VibBrac(int n) {
 	int l_iHapticInitTrial = 1;
 
 	// Set the COM port as seen in the device bluetooth settings
-	std::string str = "COM4";
+	std::string str = "COM3";
 	std::wstring g_sHapticPort(str.length(), L' ');
 	std::copy(str.begin(), str.end(), g_sHapticPort.begin());
 

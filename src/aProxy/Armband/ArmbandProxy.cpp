@@ -46,7 +46,7 @@ VibBrac::VibBrac(int n) {
 	int l_iHapticInitTrial = 1;
 
 	// Set the COM port as seen in the device bluetooth settings
-	std::string str = "COM3";
+	std::string str = "COM4";
 	std::wstring g_sHapticPort(str.length(), L' ');
 	std::copy(str.begin(), str.end(), g_sHapticPort.begin());
 
@@ -218,18 +218,8 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 	   vibration is 'alternate' when the elastic force
 	   is different than 0 (we are penetrating a tissue */
 	if (feedback_pattern == F_PATTERN_1) {
-		if (elastic(1) == 0) {
-			for (int i_motor = 0; i_motor <= 3; i_motor++)
-			{
-				armBand_motorsi(i_motor) = motor_force;
-			}
-		}
-		else {
-			if (j == 1 || j == 2 || j == 3) armBand_motorsi(0) = motor_force;
-			if (j == 4 || j == 5 || j == 6) armBand_motorsi(1) = motor_force;
-			if (j == 7 || j == 8 || j == 9) armBand_motorsi(2) = motor_force;
-			if (j == 10 || j == 11 || j == 12) armBand_motorsi(3) = motor_force;
-			if (j == 13) armBand_motorsi.setZero();
+		for (int i_motor = 0; i_motor <= 3; i_motor++) {
+			armBand_motorsi(i_motor) = motor_force;
 		}
 	}
 

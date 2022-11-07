@@ -16,6 +16,8 @@ bool first = true, second = false;
 // ------------ Custom Force Feedback initialization ------------ //
 // Task variables
 int TASK_STARTED = -1;
+int k = 0;
+bool START_PENETRATION = false;
 
 // Pattern variables
 // Pattern 2
@@ -46,7 +48,7 @@ VibBrac::VibBrac(int n) {
 	int l_iHapticInitTrial = 1;
 
 	// Set the COM port as seen in the device bluetooth settings
-	std::string str = "COM4";
+	std::string str = "COM8";
 	std::wstring g_sHapticPort(str.length(), L' ');
 	std::copy(str.begin(), str.end(), g_sHapticPort.begin());
 
@@ -175,6 +177,10 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 	// Re-init global variables
 	if ((TASK_STARTED == -1) && (elastic(1) == 0) && (friction(1) == 0)) {
 
+		// Re-init Pattern 1 variables
+		k = 0;
+		START_PENETRATION = false;
+
 		// Re-init Pattern 2 variables
 		DIV = 8;
 		IS_PUNCTURING = false;
@@ -218,8 +224,44 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 	   vibration is 'alternate' when the elastic force
 	   is different than 0 (we are penetrating a tissue */
 	if (feedback_pattern == F_PATTERN_1) {
-		for (int i_motor = 0; i_motor <= 3; i_motor++) {
+		/*for (int i_motor = 0; i_motor <= 3; i_motor++) {
 			armBand_motorsi(i_motor) = motor_force;
+		}*/
+		if (elastic(1) == 0) {
+			if (IS_PUNCTURING && START_PENETRATION) {
+				k = 0;
+				START_PENETRATION = false;
+				armBand_motorsi.setZero();
+			}
+			if (IS_PUNCTURING && (k == 2 || k == 3 || k == 4)) {
+				for (int i_motor = 0; i_motor <= 3; i_motor++)
+				{
+					armBand_motorsi(i_motor) = 200;
+				}
+			}
+			else if (IS_PUNCTURING && (k == 5)) {
+				armBand_motorsi.setZero();
+				IS_PUNCTURING = false;
+			}
+			else {
+				for (int i_motor = 0; i_motor <= 3; i_motor++)
+				{
+					armBand_motorsi(i_motor) = motor_force;
+				}
+			}
+			k++;
+			if (k == 13) k = 0;
+		}
+		else {
+			IS_PUNCTURING = true;
+			START_PENETRATION = true;
+			if (k == 13) k = 0;
+			if (k == 0 || k == 1 || k == 2) armBand_motorsi(0) = motor_force;
+			if (k == 3 || k == 4 || k == 5) armBand_motorsi(1) = motor_force;
+			if (k == 6 || k == 7 || k == 8) armBand_motorsi(2) = motor_force;
+			if (k == 9 || k == 10 || k == 11) armBand_motorsi(3) = motor_force;
+			if (k == 12) armBand_motorsi.setZero();
+			k++;
 		}
 	}
 
@@ -372,10 +414,10 @@ inline void ArmbandProxy::sendForceCustom(const Eigen::VectorXf& f, const int i,
 		armBand_motorsi.setZero();
 
 	// Debug print
-	/*std::cout << "____________________________________" << std::endl;
+	std::cout << "____________________________________" << std::endl;
 	std::cout << "motor state = [" << MOTOR_STATE[0] << "|" << MOTOR_STATE[1] << "|" << MOTOR_STATE[2] << "|" << MOTOR_STATE[3] << "]" << std::endl;
 	std::cout << "motor forces = [" << armBand_motorsi[0] << "|" << armBand_motorsi[1] << "|" << armBand_motorsi[2] << "|" << armBand_motorsi[3] << "]" << std::endl;
-	std::cout << "____________________________________" << std::endl;*/
+	std::cout << "____________________________________" << std::endl;
 
 	devices.at(0).run(armBand_motorsi);
 }

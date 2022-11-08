@@ -35,6 +35,76 @@ extern "C" {
 #endif // SPACE_DIM
 
 
+class ArmbandPattern
+{
+public:
+
+	/**
+	* @brief Default contructor of ArmbandPatter class
+	**/
+	ArmbandPattern(int n_motors);
+
+	/**
+	* @brief Function to render vibration pattern
+	**/
+	void render(int pattern, const Eigen::VectorXf& f);
+
+	/**
+	* @brief Pattern1 rendering function
+	**/
+	void pattern1(
+		Eigen::Vector4i& armBand_motorsi, Eigen::Vector3f friction, Eigen::Vector3f elastic, Eigen::Vector3f fb_m,
+		float motor_force_fric, float motor_force_elas, float motor_force);
+
+	/**
+	* @brief Pattern2 rendering function
+	**/
+	void pattern2(
+		Eigen::Vector4i& armBand_motorsi, Eigen::Vector3f friction, Eigen::Vector3f elastic, Eigen::Vector3f fb_m,
+		float motor_force_fric, float motor_force_elas, float motor_force);
+
+	/**
+	* @brief Pattern3 rendering function
+	**/
+	void pattern3(
+		Eigen::Vector4i& armBand_motorsi, Eigen::Vector3f friction, Eigen::Vector3f elastic, Eigen::Vector3f fb_m,
+		float motor_force_fric, float motor_force_elas, float motor_force);
+
+	/**
+	* @brief Default destroyer of ArmbandPatterclass
+	**/
+	~ArmbandPattern();
+
+private:
+
+	// ------------ Custom Force Feedback variables ------------ //
+	// Task variables
+	int task_started;
+	int k;
+	bool start_penetration;
+	int pattern_selected;
+
+	// Pattern variables
+	/// Pattern 2
+	int div;
+	bool is_puncturing;
+	bool tmp_is_puncturing;
+	bool is_transition;
+	/// Pattern 3
+	int num_motors;
+	int layers_passed;
+	bool uprising;
+	bool layers_updated;
+	bool p2_alt_solo;
+	std::vector<int> motor_state;
+	std::vector<float> motor_elastic_f;
+	std::vector<float> motor_friction_f;
+	std::vector<bool> penetrated;
+	// -------------------------------------------------------------- //
+
+};
+
+
 class VibBrac
 {
 public:
@@ -147,10 +217,9 @@ public:
 	* @brief CUSTOM Set function
 	* Set the custom feedback haptic force on the Armband device
 	* @param f: the feedback force to be set -> flat 3x3 matrix with shape (1,9)
-	* @param i: counter1 to alternate vibrations
-	* @param j: counter2 to alternate vibrations
+	* @param armband_pattern: the ArmbandPattern class instance
 	*/
-	void sendForceCustom(const Eigen::VectorXf& f, const int i, const int j);
+	void sendForceCustom(const Eigen::VectorXf& f, ArmbandPattern& armband_pattern);
 
 
 private:

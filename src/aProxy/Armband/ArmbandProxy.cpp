@@ -109,7 +109,7 @@ void ArmbandPattern::render(int pattern, const Eigen::VectorXf& f) {
 		this->pattern2(armBand_motorsi, friction, elastic, fb_m,
 					   motor_force_fric, motor_force_elas, motor_force);
 	else if (pattern == F_PATTERN_3)
-		this->pattern2(armBand_motorsi, friction, elastic, fb_m,
+		this->pattern3(armBand_motorsi, friction, elastic, fb_m,
 					   motor_force_fric, motor_force_elas, motor_force);
 
 	// No vibration when out of tissues
@@ -197,21 +197,50 @@ void ArmbandPattern::pattern2(
 	// TODO:
 	/* Rendering of the vibration when the needle
 		is coming back to the initial configuration*/
-		// Debug print
-		//std::cout << "motor force: " << motor_force << std::endl;
+	// Debug print
+	//std::cout << "motor force: " << motor_force << std::endl;
 	if (motor_force != 0) motor_force = 90.0;
 
-	if (elastic(1) >= 1e-3) is_puncturing = true;
-	else if (elastic(1) == 0) is_puncturing = false;
-
-	if (is_puncturing != tmp_is_puncturing) {
-		is_transition = !is_transition;
-		tmp_is_puncturing = is_puncturing;
+	if (elastic(1) >= 1e-3) {
+		is_puncturing = true;
+		start_penetration = true;
+		for (int i_motor = 0; i_motor <= 3; i_motor++) {
+			if (uprising) motor_force = 45.0;
+			armBand_motorsi(i_motor) = motor_force;
+		}
 	}
-
-	if (is_transition) {
-		is_transition = false;
-		div--;
+	else if (elastic(1) == 0) {
+		if (is_puncturing != tmp_is_puncturing) {
+			is_transition = !is_transition;
+			tmp_is_puncturing = is_puncturing;
+		}
+		if (is_transition) {
+			is_transition = false;
+			div--;
+		}
+		if (is_puncturing && start_penetration) {
+			k = 0;
+			start_penetration = false;
+			armBand_motorsi.setZero();
+		}
+		// Render rupture
+		if (is_puncturing && (k == 2 || k == 3 || k == 4)) {
+			for (int i_motor = 0; i_motor <= 3; i_motor++)
+			{
+				armBand_motorsi(i_motor) = 200;
+			}
+		}
+		else if (is_puncturing && (k == 5)) {
+			armBand_motorsi.setZero();
+			is_puncturing = false;
+		}
+		else if (!is_puncturing) {
+			if (k % div == 0) {
+				for (int i_motor = 0; i_motor <= 3; i_motor++) {
+					armBand_motorsi(i_motor) = motor_force;
+				}
+			}
+		}
 	}
 
 	// Debug print
@@ -224,19 +253,12 @@ void ArmbandPattern::pattern2(
 	std::cout << "________________________________" << std::endl;
 	*/
 
-	if (is_puncturing || uprising) {
+	if (uprising) {
 		for (int i_motor = 0; i_motor <= 3; i_motor++) {
-			if (uprising) motor_force = 45.0;
-			armBand_motorsi(i_motor) = motor_force;
+			armBand_motorsi(i_motor) = 45.0;
 		}
 	}
-	else if (!is_puncturing) {
-		if (k % div == 0) {
-			for (int i_motor = 0; i_motor <= 3; i_motor++) {
-				armBand_motorsi(i_motor) = motor_force;
-			}
-		}
-	}
+
 	k++;
 	if (k == 20) k = 0;
 }
@@ -382,7 +404,7 @@ VibBrac::VibBrac(int n) {
 	int l_iHapticInitTrial = 1;
 
 	// Set the COM port as seen in the device bluetooth settings
-	std::string str = "COM8";
+	std::string str = "COM3";
 	std::wstring g_sHapticPort(str.length(), L' ');
 	std::copy(str.begin(), str.end(), g_sHapticPort.begin());
 

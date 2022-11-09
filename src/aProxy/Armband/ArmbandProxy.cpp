@@ -2,7 +2,6 @@
 #include "ArmbandProxy.hpp"
 #include "Timer.hpp"
 #include "utils.hpp"
-#include <list>
 
 
 #define M_PI        3.14159265358979323846264338327950288   /* pi             */
@@ -23,26 +22,26 @@ ArmbandPattern::ArmbandPattern(int n_motors) {
 
 	// ------------ Custom Force Feedback variables ------------ //
 	// Task variables
-	int task_started = -1;
-	int k = 0;
-	bool start_penetration = false;
+	task_started = -1;
+	k = 0;
+	start_penetration = false;
 
 	// Pattern variables
 	/// Pattern 2
-	int div = 8;
-	bool is_puncturing = false;
-	bool tmp_is_puncturing = is_puncturing;
-	bool is_transition = false;
+	div = 8;
+	is_puncturing = false;
+	tmp_is_puncturing = is_puncturing;
+	is_transition = false;
 	/// Pattern 3
-	int num_motors = n_motors;
-	int layers_passed = 0;
-	bool uprising = false;
-	bool layers_updated = false;
-	bool p2_alt_solo = true;
-	std::list<int> motor_state = { 0, -1, -1, -1 };
-	std::list<float> motor_elastic_f = { -1., -1., -1., -1. };
-	std::list<float> motor_friction_f = { -1., -1., -1., -1. };
-	std::list<bool> penetrated = { false, false, false, false };
+	num_motors = n_motors;
+	layers_passed = 0;
+	uprising = false;
+	layers_updated = false;
+	p2_alt_solo = true;
+	motor_state = { 0, -1, -1, -1 };
+	motor_elastic_f = { -1., -1., -1., -1. };
+	motor_friction_f = { -1., -1., -1., -1. };
+	penetrated = { false, false, false, false };
 	// -------------------------------------------------------------- //
 }
 
@@ -405,7 +404,7 @@ VibBrac::VibBrac(int n) {
 	int l_iHapticInitTrial = 1;
 
 	// Set the COM port as seen in the device bluetooth settings
-	std::string str = "COM3";
+	std::string str = "COM4";
 	std::wstring g_sHapticPort(str.length(), L' ');
 	std::copy(str.begin(), str.end(), g_sHapticPort.begin());
 

@@ -116,12 +116,12 @@ void ArmbandPattern::render(int pattern, const Eigen::VectorXf& f) {
 	if (friction(1) == 0 && uprising)
 		armBand_motorsi.setZero();
 
-	// Debug print
+	/* Debug print
 	std::cout << "____________________________________" << std::endl;
 	std::cout << "motor state = [" << motor_state[0] << "|" << motor_state[1] << "|" << motor_state[2] << "|" << motor_state[3] << "]" << std::endl;
 	std::cout << "motor forces = [" << armBand_motorsi[0] << "|" << armBand_motorsi[1] << "|" << armBand_motorsi[2] << "|" << armBand_motorsi[3] << "]" << std::endl;
 	std::cout << "____________________________________" << std::endl;
-
+	*/
 	devices.at(0).run(armBand_motorsi);
 }
 

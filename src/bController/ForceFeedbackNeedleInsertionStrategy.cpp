@@ -221,8 +221,9 @@ int ForceFeedbackNeedleInsertionStrategy::execTask() {
 		this->haptics["Armband"]->setForceFeedback(this->forcefeedback);
 		// Send the force feedback signal on CoppeliaSim/V-REP
 
-		this->vrep->setFloatSignal("forceFeedback", fb_m(1), simx_opmode_oneshot, this->simPort);
-		this->vrep->setFloatSignal("rup_event", friction(1), simx_opmode_oneshot, this->simPort);
+		this->vrep->setFloatSignal("fz_sensor", friction(1), simx_opmode_oneshot, this->simPort);
+		this->vrep->setFloatSignal("fz_comp", elastic(1), simx_opmode_oneshot, this->simPort);
+		//this->vrep->setFloatSignal("contact", friction(1), simx_opmode_oneshot, this->simPort);
 
 	}
 	//// +++ Example 4: apply the same force feedback information to all the haptic devices

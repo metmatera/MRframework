@@ -28,7 +28,7 @@ ArmbandPattern::ArmbandPattern(int n_motors) {
 
 	// Pattern variables
 	/// Pattern 2
-	div = 8;
+	div = 16;
 	is_puncturing = false;
 	tmp_is_puncturing = is_puncturing;
 	is_transition = false;
@@ -66,7 +66,7 @@ void ArmbandPattern::render(int pattern, const Eigen::VectorXf& f) {
 		start_penetration = false;
 
 		// Re-init Pattern 2 variables
-		div = 8;
+		div = 16;
 		is_puncturing = false;
 		tmp_is_puncturing = is_puncturing;
 		is_transition = false;
@@ -199,24 +199,22 @@ void ArmbandPattern::pattern2(
 		is coming back to the initial configuration*/
 	// Debug print
 	//std::cout << "motor force: " << motor_force << std::endl;
-	if (motor_force != 0) motor_force = 90.0;
+	// Original fixed force
+	//if (motor_force != 0) motor_force = 90.0;
 
 	if (elastic(1) >= 1e-3) {
+		is_transition = true;
 		is_puncturing = true;
 		start_penetration = true;
 		for (int i_motor = 0; i_motor <= 3; i_motor++) {
 			if (uprising) motor_force = 45.0;
-			armBand_motorsi(i_motor) = motor_force;
+			armBand_motorsi(i_motor) = motor_force_elas;
 		}
 	}
 	else if (elastic(1) == 0) {
-		if (is_puncturing != tmp_is_puncturing) {
-			is_transition = !is_transition;
-			tmp_is_puncturing = is_puncturing;
-		}
 		if (is_transition) {
+			div = div == 2 ? 2 : div / 2;
 			is_transition = false;
-			div--;
 		}
 		if (is_puncturing && start_penetration) {
 			k = 0;
@@ -235,32 +233,35 @@ void ArmbandPattern::pattern2(
 			is_puncturing = false;
 		}
 		else if (!is_puncturing) {
-			if (k % div == 0) {
+			if ((k % div == 0) || (((k-1) % div == 0) && (div > 2))) {
 				for (int i_motor = 0; i_motor <= 3; i_motor++) {
-					armBand_motorsi(i_motor) = motor_force;
+					armBand_motorsi(i_motor) = motor_force_fric;
 				}
 			}
 		}
 	}
-
-	// Debug print
-	/*
-	std::cout << "elastic force: " << elastic(1) << std::endl;
-	std::cout << "IS_PUNCTURING: " << IS_PUNCTURING << std::endl;
-	std::cout << "is_transition: " << is_transition << std::endl;
-	std::cout << "TMP_IS_PUNCTURING: " << TMP_IS_PUNCTURING << std::endl;
-	std::cout << "DIV: " << DIV << std::endl;
-	std::cout << "________________________________" << std::endl;
-	*/
 
 	if (uprising) {
 		for (int i_motor = 0; i_motor <= 3; i_motor++) {
 			armBand_motorsi(i_motor) = 45.0;
 		}
 	}
+	else {
+		motor_force_fric = motor_force_fric * 1.5;
+	}
 
 	k++;
 	if (k == 20) k = 0;
+
+	// Debug print
+	std::cout << "elastic force: " << motor_force_elas << std::endl;
+	std::cout << "friction force: " << motor_force_fric << std::endl;
+	/*std::cout << "IS_PUNCTURING: " << IS_PUNCTURING << std::endl;
+	std::cout << "is_transition: " << is_transition << std::endl;
+	std::cout << "TMP_IS_PUNCTURING: " << TMP_IS_PUNCTURING << std::endl;
+	std::cout << "div: " << div << std::endl;
+	std::cout << "k: " << k << std::endl;
+	std::cout << "________________________________" << std::endl;*/
 }
 
 /**

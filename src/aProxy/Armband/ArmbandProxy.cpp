@@ -297,9 +297,9 @@ void ArmbandPattern::pattern2(
 	if (k == 20) k = 0;
 
 	// Debug print
-	std::cout << "elastic force: " << motor_force_elas << std::endl;
+	/*std::cout << "elastic force: " << motor_force_elas << std::endl;
 	std::cout << "friction force: " << motor_force_fric << std::endl;
-	/*std::cout << "IS_PUNCTURING: " << IS_PUNCTURING << std::endl;
+	std::cout << "IS_PUNCTURING: " << IS_PUNCTURING << std::endl;
 	std::cout << "is_transition: " << is_transition << std::endl;
 	std::cout << "TMP_IS_PUNCTURING: " << TMP_IS_PUNCTURING << std::endl;
 	std::cout << "div: " << div << std::endl;

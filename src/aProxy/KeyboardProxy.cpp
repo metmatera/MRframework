@@ -405,6 +405,7 @@ void KeyboardProxy::registerRupture() {
 	
 	// Update the haptic device
 	HapticState hs;
+	hs.pattern = -1;
 	hs.rup_reg_time = (char*)reg_time_str;
 	this->sys.updateHapticDevice(hs);
 	std::cout << "[user] - Rupture detected at time " << reg_time_str << std::endl;

@@ -48,6 +48,13 @@ public:
 	inline void setForceFeedback(const Eigen::VectorXf& f) { this->fbForce = f; }
 
 	/**
+	* @brief Get function
+	* Get the 3D feedback force vector
+	* @return the 3D feedback force vector
+	*/
+	inline Eigen::VectorXf getForceFeedback() { return this->fbForce; }
+
+	/**
 	* @brief Set function
 	* Set the feedback pattern
 	* @param f: feedback pattern to be set
@@ -56,18 +63,24 @@ public:
 
 	/**
 	* @brief Get function
-	* Get the 3D feedback force vector
-	* @return the 3D feedback force vector
-	*/
-	inline Eigen::VectorXf getForceFeedback() { return this->fbForce; }
-
-	/**
-	* @brief Get function
 	* Get the feedback pattern
 	* @return the feedback pattern
 	*/
 	inline int getFeedbackPattern() { return this->fbPattern; }
 
+	/**
+	* @brief Set function
+	* Set the feedback rupture time registered by the user
+	* @param rup_time: rupture time to be set
+	*/
+	inline void setFeedbackRuptureTime(const char * rup_time) { this->fbRuptureTime = (char *)rup_time; }
+
+	/**
+	* @brief Get function
+	* Get the feedback rupture time
+	* @return the feedback rupture time, registered after the user detection
+	*/
+	inline char * getFeedbackRuptureTime() { return this->fbRuptureTime; }
 
 	/**
 	* @brief Init function
@@ -112,9 +125,9 @@ protected:
 	float force_scale;				//!< Scale factor for the master commanded force on the slave system
 	Eigen::VectorXf fbForce;		//!< 3D feedback force vector of the Haptic interface
 	int fbPattern;					//!< feedback pattern of the Haptic interface
+	char * fbRuptureTime;			//!< feedback rupture time of the Haptic interface
 	bool useForceFeedback;			//!< Flag stating if the force feedback is enabled in the teleoperation scheme
 	Eigen::MatrixXf Rms;			//!< Rotation matrix expressing the orientation of the slave system (robot) wrt the haptic system (HapticInterface)
-
 
 };
 

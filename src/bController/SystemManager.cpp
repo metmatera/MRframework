@@ -1180,6 +1180,7 @@ void SystemManager::updateHapticDevice(const HapticState& hs) {
 	if (haptIt != this->instruments.end()) {
 		haptic = (HapticInterface*)this->instruments[hapticName.c_str()];
 		haptic->setFeedbackPattern(hs.pattern);
+		haptic->setFeedbackRuptureTime(hs.rup_reg_time);
 		//haptic->setForceFeedback(hs.force);
 		//std::cout << "hs.force = " << hs.force.transpose() << std::endl;
 	}

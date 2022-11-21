@@ -3,6 +3,9 @@
 
 // Standard Header files
 #include <iostream>
+#include <iomanip>
+#include <chrono>
+#include <ctime> 
 
 /**
 * @brief Default contructor of KeyboardProxy class
@@ -151,6 +154,10 @@ void KeyboardProxy::run() {
 			else if (key == (int)'p') { // Custom haptic pattern selection
 				//...
 				this->selectPattern();
+			}
+			else if (key == (int)'r') { // Rupture event registration
+				//...
+				this->registerRupture();
 			}
 
 
@@ -373,4 +380,32 @@ void KeyboardProxy::selectPattern() {
 	this->sys.updateHapticDevice(hs);
 	std::cout << "Pattern assigned successfully" << std::endl;
 
+}
+
+/**
+* @brief rupture registration function
+* Register that the user has detected a rupture event
+*/
+void KeyboardProxy::registerRupture() {
+
+	// Save rupture detection time
+	auto reg = std::chrono::system_clock::now();
+	auto reg_millis = std::chrono::duration_cast<std::chrono::milliseconds>(reg.time_since_epoch()).count() % 1000;
+	std::time_t reg_time = std::chrono::system_clock::to_time_t(reg);
+	auto time_struct = gmtime(&reg_time);
+
+	// Create timestamp string
+	std::stringstream ss;
+	std::string hour = std::to_string(time_struct->tm_hour);
+	std::string min = std::to_string(time_struct->tm_min);
+	std::string sec = std::to_string(time_struct->tm_sec);
+	ss << hour << ":" << min << ":" << sec << '.' << std::setfill('0') << std::setw(3) << reg_millis;
+	std::string ssstr = ss.str();
+	const char* reg_time_str = ssstr.c_str();
+	
+	// Update the haptic device
+	HapticState hs;
+	hs.rup_reg_time = (char*)reg_time_str;
+	this->sys.updateHapticDevice(hs);
+	std::cout << "[user] - Rupture detected at time " << reg_time_str << std::endl;
 }

@@ -50,6 +50,12 @@ public:
 	void render(int pattern, const Eigen::VectorXf& f);
 
 	/**
+	* @brief Rupture event registration function
+	*	This regisrates the rupture timestamp into a string and shows it
+	*/
+	void register_rupture();
+
+	/**
 	* @brief Pattern1 rendering function
 	**/
 	void pattern1(
@@ -100,6 +106,10 @@ private:
 	std::vector<float> motor_elastic_f;
 	std::vector<float> motor_friction_f;
 	std::vector<bool> penetrated;
+	// -------------------------------------------------------------- //
+
+	// --------------- Custom User Feedback variables --------------- //
+	std::vector<char*> rupture_times;
 	// -------------------------------------------------------------- //
 
 };

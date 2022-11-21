@@ -3,6 +3,11 @@
 #include "Timer.hpp"
 #include "utils.hpp"
 
+// Standard Header files
+#include <iomanip>
+#include <chrono>
+#include <ctime> 
+
 
 #define M_PI        3.14159265358979323846264338327950288   /* pi             */
 
@@ -43,6 +48,10 @@ ArmbandPattern::ArmbandPattern(int n_motors) {
 	motor_friction_f = { -1., -1., -1., -1. };
 	penetrated = { false, false, false, false };
 	// -------------------------------------------------------------- //
+
+	// --------------- Custom User Feedback variables --------------- //
+	rupture_times = { ".", ".", ".", "." };
+	// -------------------------------------------------------------- //
 }
 
 /**
@@ -80,6 +89,7 @@ void ArmbandPattern::render(int pattern, const Eigen::VectorXf& f) {
 		motor_elastic_f = { -1., -1., -1., -1. };
 		motor_friction_f = { -1., -1., -1., -1. };
 		penetrated = { false, false, false, false };
+		rupture_times = { ".", ".", ".", "." };
 	}
 
 	// Force selection and computation
@@ -126,6 +136,35 @@ void ArmbandPattern::render(int pattern, const Eigen::VectorXf& f) {
 }
 
 /**
+* @brief Rupture event registration function
+*	This regisrates the rupture timestamp into a string and shows it
+*/
+void ArmbandPattern::register_rupture() {
+
+	// Get timestamp of the rupture event
+	auto rup = std::chrono::system_clock::now();
+	auto rup_millis = std::chrono::duration_cast<std::chrono::milliseconds>(rup.time_since_epoch()).count() % 1000;
+	std::time_t rup_time = std::chrono::system_clock::to_time_t(rup);
+	auto time_struct = gmtime(&rup_time);
+	std::stringstream ss;
+	std::string hour = std::to_string(time_struct->tm_hour);
+	std::string min = std::to_string(time_struct->tm_min);
+	std::string sec = std::to_string(time_struct->tm_sec);
+	ss << hour << ":" << min << ":" << sec << '.' << std::setfill('0') << std::setw(3) << rup_millis;
+	std::string ssstr = ss.str();
+	const char* str_time = ssstr.c_str();
+
+	// Register timestamp
+	for (int i = 0; i < num_motors; i++) {
+		if (rupture_times[i] == ".") {
+			rupture_times[i] = (char*)str_time;
+			break;
+		}
+	}
+	std::cout << "[system] - Rupture happened at time " << str_time << std::endl;
+}
+
+/**
 * @brief Pattern1 rendering function
 *	All the motors vibrate contemporary, and the
 	vibration is 'alternate' when the elastic force
@@ -148,6 +187,8 @@ void ArmbandPattern::pattern1(
 			{
 				armBand_motorsi(i_motor) = 200;
 			}
+			if (k == 2)
+				this->register_rupture();
 		}
 		else if (is_puncturing && (k == 5)) {
 			armBand_motorsi.setZero();
@@ -227,6 +268,8 @@ void ArmbandPattern::pattern2(
 			{
 				armBand_motorsi(i_motor) = 200;
 			}
+			if (k == 2)
+				this->register_rupture();
 		}
 		else if (is_puncturing && (k == 5)) {
 			armBand_motorsi.setZero();
@@ -367,6 +410,8 @@ void ArmbandPattern::pattern3(
 			{
 				armBand_motorsi(i_motor) = 200;
 			}
+			if (k == 2)
+				this->register_rupture();
 		}
 		else if (is_puncturing && (k == 5)) {
 			armBand_motorsi.setZero();
@@ -405,7 +450,7 @@ VibBrac::VibBrac(int n) {
 	int l_iHapticInitTrial = 1;
 
 	// Set the COM port as seen in the device bluetooth settings
-	std::string str = "COM4";
+	std::string str = "COM3";
 	std::wstring g_sHapticPort(str.length(), L' ');
 	std::copy(str.begin(), str.end(), g_sHapticPort.begin());
 

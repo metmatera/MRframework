@@ -111,6 +111,12 @@ public:
 	*/
 	void selectPattern();
 
+	/**
+	* @brief rupture registration function
+	* Register that the user has detected a rupture event
+	*/
+	void registerRupture();
+
 private:
 
 	KeyboardData kbdata;			//!< KeyboardData structure

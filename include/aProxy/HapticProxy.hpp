@@ -7,9 +7,10 @@
 
 struct HapticState {
 
-	Eigen::VectorXf force;		// force vector of the kinestetic feedback
-	float vibroIntensity;		// intensity of the vibrotactile feedback -- Please note that, differently from what can be expected, the armband still uses the force variable (kinestetic) feedback rendering, rather than this variable, as this separation has been planned later. TODO: Consider to re-organize and associate variables to proper devices accordingly.
-	int pattern;				// feedback pattern
+	Eigen::VectorXf force;					// force vector of the kinestetic feedback
+	float vibroIntensity;					// intensity of the vibrotactile feedback -- Please note that, differently from what can be expected, the armband still uses the force variable (kinestetic) feedback rendering, rather than this variable, as this separation has been planned later. TODO: Consider to re-organize and associate variables to proper devices accordingly.
+	int pattern;							// feedback pattern
+	char * rup_reg_time;					// actual timestamp at which the user detected a rupture event
 
 };
 
@@ -86,6 +87,20 @@ public:
 	* @return the feedback pattern
 	*/
 	inline int getHapticPattern() { return this->hapticState.pattern; }
+
+	/**
+	* @brief Set function
+	* Set the actual rupture registration time
+	* @param rup_time: the rup time to be set
+	*/
+	inline void setHapticRupTime(const char * rup_time) { this->hapticState.rup_reg_time = (char *)rup_time; }
+
+	/**
+	* @brief Get function
+	* Get the actual rupture registration time
+	* @return the actual rupture registration time, registered after the user detection
+	*/
+	inline char * getHapticRupTime() { return this->hapticState.rup_reg_time; }
 
 	/**
 	* @brief Get function

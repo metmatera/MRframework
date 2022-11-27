@@ -1,15 +1,18 @@
-# MRframework
+### Introduction ###
+The aim of this project is to render the elastic and the friction forces with a cutaneous feedback given by the Armband device. The forces are generated during the insertion of a needle (KUKA Robot) into a phantom composed of several layers (tissues) with different properties and coefficients. In particular we set a predefined trajectory for the needle, such that it passes through four different layers, respectively, fat, muscle, liver.
 
-_Work in progress_
+In the first (white) graph reported in CoppeliaSim we draw singularly the elastic force (purple) and the friction force (red). In the graph below (black), we draw the force feedback component that is a particular combination of the aforementioned forces.
 
-Only the first time:
-- Move to the local folder where you want to download the entire project (e.g., _cd Desktop/github_)
-- _git clone https://github.com/metmatera/MRframework.git_
+### Rendering patterns ###
+We render the forces through the Armband Device. In particular, we developed three different rendering patterns (the pattern can be chosen from terminal before the execution of the task):
+- **Pattern no. 1:** The elastic force is rendered through a kind of circular activation of the four motors of the device. So the motors are activated one by one continuously until the elastic force is newly zero (moment of tissue rupture). The rupture of each tissue is rendered by the activation of all the motors at the same time with high intensity (around the maximum value allowed for the motors). The friction force is rendered by a continuous vibration of the device and the intensity of the vibration is proportional to the intensity of the friction force. 
+- **Pattern no. 2:** The elastic force is rendered through a continuous vibration of the four motors of the device. The intensity of the vibration is proportional to the elastic force. At the moment of the tissue rupture, we have the same behavior as the Pattern 1. Instead, the friction force is rendered through an alternate vibration. The intensity of the vibration is proportional to the friction force. The frequency of the vibrations is increased as you pass from one layer to another (PS: the frequency is the same for both the third and the fourth layers, because too high a frequency would resemble a continuous vibration, due to the imprecision of the device).
+- **Pattern no. 3:** in this solution we combine one of the motors of the device to each single layer. In fact, the elastic force exerted during the pressure of the first layer activates only the first motor with an alternating vibration proportional to the force itself. When the fabric breaks, it behaves like the other two patterns. The friction force is rendered through a continuous and proportional vibration. When the needle meets the second layer it repeats the same behavior to make the force elastic but with another motor. The friction force will now be rendered through the first and second movers. The same happens with the other two layers, until all four engines are activated at the same time.
 
-Steps to be always up-to-date (you have to be _git_ installed):
-- Check always the status of the repository with che command _*git status*_. If the _tree_ is not clean, probably you have to _pull_ or _push_ some files.
-- _git pull_ (to make your local repository up-to-date _w.r.t._ the GitHub repository)
-- After modifying your local repository you will need to update the Github repository following the next steps
-- _git add ._
-- _git commit -m "msg"_, where _msg_ is a small text to describe your commit
-- _git push_
+### Survey and Evaluation ###
+To validate the correct behavior of the device we decided to carry out a survey on a group of people. Each person will have to test the device in different conditions (with and without video, with and without graphs, etc.) and then fill out a questionnaire that will help us to make a statistic and a general evaluation of the functioning. We are also working on other real-time evaluation systems. For example, we can allow the user to press a key at the exact moment in which he perceives the rupture of a tissue and then compare the results obtained, verifying whether there is an actual correspondence with the real rupture of the tissues.
+The metrics we use can be the following:
+- The number of times that the rupture is perceived compared to the real number of ruptures
+- The lapse of time between the real rupture and the instant the key is pressed (average time error)
+- Data, questionnaire and survey (*WIP*): https://docs.google.com/spreadsheets/d/1hWNV-fvlMk-Ej7HDOBR_1I5rbFPVKm6oEjv6WkMIHKQ/edit?usp=sharing
+- Other metrics in progress
